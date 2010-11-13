@@ -36,6 +36,7 @@ class Container {
     if (!$event->is_processed()) {
       throw new Exception('Static method not found: '.$method);
     }
+    return $event->get_return_value();
   }
 
   protected $_profile;
@@ -54,8 +55,7 @@ class Container {
   }
   
   public function __call($method, $arguments) {
-    $event = Container::factory('\Elastic\System\Dispatcher\Event', null, array('name' => 'container.method_not_found', 'arguments' => array('method' => $method, 'arguments' => $arguments)));
-    Container::factory('\Elastic\System\Dispatcher')->notify_until($event);
+    $event = Event::factory('container.method_not_found', array('method' => $method, 'arguments' => $arguments))->notify_one();
     if (!$event->is_processed()) {
       throw new Exception();
     }
@@ -335,7 +335,7 @@ class Container {
       if ($scope_['scope'] == 'singleton') {
         $scope = $scope_;
 
-        if (($object = Container::instance($scope_['profile'])->get_object($scope_['class']))) {
+        if (($object = Container::instance($scope['profile'])->get_object($scope['class']))) {
           return $object;
         }
       }
